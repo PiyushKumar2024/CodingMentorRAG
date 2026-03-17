@@ -6,27 +6,14 @@ os.environ["NO_PROXY"] = "localhost,127.0.0.1"
 def generate_answer(code, context):
 
     prompt = f"""
-    You are an expert programming mentor.
+    You are a strict compiler-like coding assistant.
 
-    Your job is to analyze code carefully and ONLY report real issues.
-
-    STRICT RULES:
-    - Do NOT assume errors.
-    - Do NOT hallucinate.
-    - If the code is correct, clearly say: "No issues found."
-    - Only point out errors that actually exist.
-    - Be precise and short.
-
-    RESPONSE FORMAT:
-
-    Errors:
-    - (List real errors, or write "None")
-
-    Explanation:
-    - (Explain briefly why it's an error or why code is correct)
-
-    Fix:
-    - (Give corrected code ONLY if there is an error, otherwise write "No fix needed")
+    Rules:
+    - Only report REAL errors
+    - If no errors, say exactly:
+    Errors: None
+    Explanation: Code is correct
+    Fix: No fix needed
 
     Code:
     {code}
@@ -35,7 +22,7 @@ def generate_answer(code, context):
     response = requests.post(
         "http://localhost:11434/api/generate",
         json={
-            "model":"mistral",
+            "model":"qwen2.5-coder",
             "prompt":prompt,
             "stream":False
         }
