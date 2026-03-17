@@ -1,36 +1,30 @@
 import json
 import faiss
-import numpy as np
-from rag_engine.embed import get_embedding
+from langchain_community.vectorstores import FAISS
+from langchain_huggingface import HuggingFaceEmbeddings
 
-with open("knowledge_base/coding_kb.json") as f:
-    docs = json.load(f)
+embeddings = HuggingFaceEmbeddings(model_name="all-MiniLM-L6-v2")
 
-texts = [
-    f"""
+def load_vector_store():
+    with open("knowledge_base/coding_kb.json") as f:
+        docs = json.load(f)
+
+    texts = [
+        f"""
     Topic: {d['topic']}
     Description: {d['description']}
     Bad Example: {d['bad_example']}
     Fix: {d['fix']}
     Explanation: {d['explanation']}
     """
-    for d in docs
-]
+        for d in docs
+    ]
+    
+    vectorstore = FAISS.from_texts(texts, embeddings)
+    return vectorstore
 
-embeddings = [get_embedding(text) for text in texts]
-
-dimension = len(embeddings[0])
-
-index = faiss.IndexFlatL2(dimension)
-
-index.add(np.array(embeddings))
+vectorstore = load_vector_store()
 
 def search(query, k=2):
-
-    query_embedding = np.array([get_embedding(query)])
-
-    distances, indices = index.search(query_embedding, k)
-
-    results = [texts[i] for i in indices[0]]
-
-    return results
+    results = vectorstore.similarity_search(query, k=k)
+    return [doc.page_content for doc in results]

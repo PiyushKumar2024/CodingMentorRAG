@@ -3,3 +3,7 @@ uvicorn
 faiss-cpu
 sentence-transformers
 numpy
+langchain
+langchain-community
+langchain-huggingface
+streamlit
