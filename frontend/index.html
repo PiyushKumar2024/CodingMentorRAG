@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>AI Coding Mentor</title>
+
+<style>
+
+body{
+font-family: Arial;
+background:#0f172a;
+color:white;
+display:flex;
+justify-content:center;
+align-items:center;
+height:100vh;
+}
+
+.container{
+width:600px;
+background:#1e293b;
+padding:25px;
+border-radius:10px;
+}
+
+textarea{
+width:100%;
+height:200px;
+background:#020617;
+color:white;
+border:none;
+padding:10px;
+font-family:monospace;
+}
+
+button{
+margin-top:10px;
+padding:10px 15px;
+background:#3b82f6;
+border:none;
+color:white;
+cursor:pointer;
+}
+
+button:disabled{
+background:#475569;
+cursor:not-allowed;
+}
+
+.response{
+margin-top:20px;
+background:#020617;
+padding:10px;
+white-space:pre-wrap;
+min-height:60px;
+}
+
+.loading{
+margin-top:10px;
+color:#38bdf8;
+font-style:italic;
+display:none;
+}
+
+</style>
+</head>
+
+<body>
+
+<div class="container">
+
+<h2>AI Coding Mentor</h2>
+
+<textarea id="code" placeholder="Paste your code here..."></textarea>
+
+<button id="analyzeBtn" onclick="analyze()">Analyze Code</button>
+
+<div class="loading" id="loading">
+Analyzing code... 
+</div>
+
+<div class="response" id="result"></div>
+
+</div>
+
+<script>
+
+async function analyze(){
+
+const code = document.getElementById("code").value;
+const button = document.getElementById("analyzeBtn");
+const loading = document.getElementById("loading");
+const result = document.getElementById("result");
+
+button.disabled = true;
+loading.style.display = "block";
+result.innerText = "";
+
+try{
+
+const response = await fetch("http://127.0.0.1:8000/mentor",{
+method:"POST",
+headers:{
+"Content-Type":"application/json"
+},
+body:JSON.stringify({
+code:code
+})
+});
+
+const data = await response.json();
+
+result.innerText = data.mentor_response;
+
+}catch(error){
+
+result.innerText = "Error contacting AI mentor.";
+
+}
+
+loading.style.display = "none";
+button.disabled = false;
+
+}
+
+</script>
+
+</body>
+</html>

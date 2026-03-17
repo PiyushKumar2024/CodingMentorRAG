@@ -1,0 +1,187 @@
+[
+  {
+    "topic": "off_by_one_error",
+    "description": "Loop runs one iteration too many or too few.",
+    "bad_example": "for(int i = 0; i <= n; i++) { arr[i] = 0; }",
+    "fix": "for(int i = 0; i < n; i++) { arr[i] = 0; }",
+    "explanation": "Arrays are indexed from 0 to n-1. Using <= n accesses out-of-bounds index.",
+    "keywords": ["loop", "array", "index", "boundary"]
+  },
+  {
+    "topic": "infinite_loop",
+    "description": "Loop condition never becomes false.",
+    "bad_example": "while(i < 10) { printf(\"%d\", i); }",
+    "fix": "while(i < 10) { printf(\"%d\", i); i++; }",
+    "explanation": "Loop variable must be updated to eventually break the condition.",
+    "keywords": ["loop", "condition", "infinite"]
+  },
+  {
+    "topic": "recursion_base_case",
+    "description": "Recursive function missing stopping condition.",
+    "bad_example": "int f(int n){ return f(n-1); }",
+    "fix": "int f(int n){ if(n==0) return 1; return f(n-1); }",
+    "explanation": "Without a base case, recursion continues indefinitely.",
+    "keywords": ["recursion", "base case", "stack"]
+  },
+  {
+    "topic": "loop_boundary",
+    "description": "Loop exceeds valid array indices.",
+    "bad_example": "for(int i=0;i<=size;i++){ arr[i]=0; }",
+    "fix": "for(int i=0;i<size;i++){ arr[i]=0; }",
+    "explanation": "Valid indices are from 0 to size-1.",
+    "keywords": ["loop", "array", "boundary"]
+  },
+  {
+    "topic": "array_indexing",
+    "description": "Accessing invalid array index.",
+    "bad_example": "int x = arr[10]; // array size is 10",
+    "fix": "int x = arr[9];",
+    "explanation": "Array indices start from 0, last index is size-1.",
+    "keywords": ["array", "index", "bounds"]
+  },
+  {
+    "topic": "sorting_algorithms",
+    "description": "Sorting arranges elements in order.",
+    "bad_example": "for(int i=0;i<n;i++) for(int j=0;j<n;j++) swap(arr[i],arr[j]);",
+    "fix": "Use proper sorting logic like bubble/merge sort.",
+    "explanation": "Incorrect logic can lead to inefficient or wrong sorting.",
+    "keywords": ["sorting", "algorithm"]
+  },
+  {
+    "topic": "binary_search",
+    "description": "Binary search requires sorted array.",
+    "bad_example": "binarySearch(arr, n, target); // unsorted array",
+    "fix": "Sort array before binary search.",
+    "explanation": "Binary search works only on sorted data.",
+    "keywords": ["search", "binary", "sorted"]
+  },
+  {
+    "topic": "time_complexity",
+    "description": "Algorithm efficiency measurement.",
+    "bad_example": "nested loops causing O(n^2)",
+    "fix": "Optimize using better approach like hashing or divide and conquer.",
+    "explanation": "High complexity leads to slow performance.",
+    "keywords": ["complexity", "performance"]
+  },
+  {
+    "topic": "nested_loops",
+    "description": "Loops inside loops increase complexity.",
+    "bad_example": "for(i=0;i<n;i++) for(j=0;j<n;j++) {}",
+    "fix": "Try reducing nested loops or using better data structures.",
+    "explanation": "Nested loops often lead to O(n^2) complexity.",
+    "keywords": ["loops", "nested"]
+  },
+  {
+    "topic": "recursion_stack",
+    "description": "Too many recursive calls cause stack overflow.",
+    "bad_example": "f(n){ return f(n-1); }",
+    "fix": "Add base case and reduce recursion depth.",
+    "explanation": "Each recursive call consumes stack memory.",
+    "keywords": ["recursion", "stack"]
+  },
+  {
+    "topic": "mutable_vs_immutable",
+    "description": "Mutable objects can change, immutable cannot.",
+    "bad_example": "string[0] = 'a';",
+    "fix": "Create new string instead of modifying.",
+    "explanation": "Some languages treat strings as immutable.",
+    "keywords": ["mutable", "immutable"]
+  },
+  {
+    "topic": "variable_scope",
+    "description": "Variable accessibility depends on scope.",
+    "bad_example": "{ int x = 5; } printf(x);",
+    "fix": "Declare variable in correct scope.",
+    "explanation": "Variables declared in block are not accessible outside.",
+    "keywords": ["scope", "variable"]
+  },
+  {
+    "topic": "function_return",
+    "description": "Functions must return correct values.",
+    "bad_example": "int f(){ int x=5; }",
+    "fix": "int f(){ return 5; }",
+    "explanation": "Missing return leads to undefined behavior.",
+    "keywords": ["function", "return"]
+  },
+  {
+    "topic": "exception_handling",
+    "description": "Handling runtime errors properly.",
+    "bad_example": "int x = 10/0;",
+    "fix": "Use try-catch or checks before division.",
+    "explanation": "Division by zero causes runtime error.",
+    "keywords": ["exception", "error"]
+  },
+  {
+    "topic": "string_manipulation",
+    "description": "Incorrect string handling.",
+    "bad_example": "char *s = \"hello\"; s[0] = 'H';",
+    "fix": "Use char array instead.",
+    "explanation": "String literals may be immutable.",
+    "keywords": ["string"]
+  },
+  {
+    "topic": "memory_usage",
+    "description": "Inefficient memory usage.",
+    "bad_example": "int arr[100000000];",
+    "fix": "Use dynamic allocation carefully.",
+    "explanation": "Large allocations may crash program.",
+    "keywords": ["memory"]
+  },
+  {
+    "topic": "dynamic_programming",
+    "description": "Overlapping subproblems not reused.",
+    "bad_example": "recursive fibonacci without memoization",
+    "fix": "Use memoization or tabulation.",
+    "explanation": "Avoid recomputation.",
+    "keywords": ["dp"]
+  },
+  {
+    "topic": "greedy_algorithms",
+    "description": "Wrong greedy choice.",
+    "bad_example": "choosing local max without considering global",
+    "fix": "Verify greedy property before applying.",
+    "explanation": "Greedy doesn't always work.",
+    "keywords": ["greedy"]
+  },
+
+  {
+    "topic": "missing_semicolon",
+    "description": "Statements must end with semicolon.",
+    "bad_example": "printf(\"hello\")",
+    "fix": "printf(\"hello\");",
+    "explanation": "Missing semicolon causes compilation error.",
+    "keywords": ["syntax", "semicolon"]
+  },
+  {
+    "topic": "missing_quote",
+    "description": "String not properly closed.",
+    "bad_example": "printf(\"hello);",
+    "fix": "printf(\"hello\");",
+    "explanation": "Unclosed quotes break string parsing.",
+    "keywords": ["string", "quote"]
+  },
+  {
+    "topic": "missing_bracket",
+    "description": "Missing closing brace.",
+    "bad_example": "if(x>0){ printf(\"hi\");",
+    "fix": "if(x>0){ printf(\"hi\"); }",
+    "explanation": "Blocks must be properly closed.",
+    "keywords": ["syntax", "bracket"]
+  },
+  {
+    "topic": "uninitialized_variable",
+    "description": "Variable used without initialization.",
+    "bad_example": "int x; printf(\"%d\", x);",
+    "fix": "int x = 0;",
+    "explanation": "Uninitialized variables contain garbage values.",
+    "keywords": ["variable"]
+  },
+  {
+    "topic": "division_by_zero",
+    "description": "Division by zero error.",
+    "bad_example": "int x = 10/0;",
+    "fix": "Check denominator before division.",
+    "explanation": "Causes runtime crash.",
+    "keywords": ["math"]
+  }
+]
