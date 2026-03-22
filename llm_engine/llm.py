@@ -4,35 +4,26 @@ from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
 
 os.environ["NO_PROXY"] = "localhost,127.0.0.1"
 
-# Using deepseek-coder:6.7b with streaming enabled
+# setup model w/ streaming on for immediate feedback
 llm = ChatOllama(model="deepseek-coder:6.7b", temperature=0, streaming=True)
 
-# 1. Pure LLM Prompt (No RAG) for Quick Reviews
 quick_review_prompt = ChatPromptTemplate.from_messages([
-    ("system", """You are an elite Senior Staff Software Engineer and Security Auditor.
-Your job is to review the provided code snippet.
-Do NOT just point out basic syntax errors—provide a deep, professional analysis.
-
-Your review MUST cover:
-1. Security vulnerabilities (OWASP, buffer overflows, injection, etc.)
-2. Time and Space Complexity (Big O)
-3. Code Quality & Clean Code principles (SOLID, DRY)
-4. A complete, refactored Best-Practice version of the code.
-
-Be blunt, precise, and extremely thorough."""),
-    ("user", "Code to review:\n{code}")
+    ("system", """You are a senior developer. Review the code snippet below.
+Provide a professional analysis covering:
+1. Security vulnerabilities
+2. Time/Space Complexity
+3. Code Quality 
+4. A refactored version of the code."""),
+    ("user", "{code}")
 ])
 
-# 2. Workspace Assistant Prompt (With Dynamic RAG and Memory)
 workspace_prompt = ChatPromptTemplate.from_messages([
-    ("system", """You are an expert AI Developer perfectly integrated into the user's project workspace.
-Use the provided codebase context and the conversation history to answer the user's architectural questions or generate new files/features that perfectly match the existing project patterns.
+    ("system", """You are an AI assistant helping with a project workspace.
+Answer questions or write code based on the provided context.
 
-Codebase Context:
-{context}
-
-If asked to generate code, provide completely working replacements or new files. Do NOT make up files that don't exist."""),
-    MessagesPlaceholder(variable_name="chat_history"), #for history of chat
+Context:
+{context}"""),
+    MessagesPlaceholder(variable_name="chat_history"),
     ("user", "{query}")
 ])
 
@@ -44,16 +35,12 @@ def generate_snippet_review_stream(code: str):
         for chunk in quick_review_chain.stream({"code": code}):
             yield chunk.content
     except Exception as e:
-        yield f"\n\nError connecting to LLM: {e}"
+        yield f"\n\nError: {e}"
 
 def generate_workspace_answer_stream(query: str, context: str, chat_history: list = None):
-    if chat_history is None:
-        chat_history = []
-        
-    formatted_history = []
-    for msg in chat_history:
-        # Format Streamlit message dicts into LangChain role-tuples
-        formatted_history.append((msg["role"], msg["content"]))
+    chat_history = chat_history or []
+    # format dicts into tuples for langchain
+    formatted_history = [(msg["role"], msg["content"]) for msg in chat_history]
         
     try:
         for chunk in workspace_chain.stream({
@@ -63,4 +50,4 @@ def generate_workspace_answer_stream(query: str, context: str, chat_history: lis
         }):
             yield chunk.content
     except Exception as e:
-        yield f"\n\nError connecting to LLM: {e}"
+        yield f"\n\nError: {e}"

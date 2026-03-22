@@ -4,11 +4,10 @@ from langchain_community.document_loaders.generic import GenericLoader
 from langchain_community.document_loaders.parsers import LanguageParser
 
 def load_and_split_project(directory_path: str):
-    """Loads and splits multi-language codebase files smoothly and dynamically."""
-    
-    # Standard extensions for most projects
+    # just grab the most common extensions
     suffixes = [".py", ".js", ".jsx", ".ts", ".tsx", ".c", ".cpp", ".h", ".hpp", ".go", ".java", ".rs", ".md", ".html"]
     
+    # generic loader doesn't choke on binary stuff by default
     loader = GenericLoader.from_filesystem(
         directory_path,
         glob="**/*",
@@ -16,14 +15,15 @@ def load_and_split_project(directory_path: str):
         parser=LanguageParser()
     )
     docs = loader.load()
-    if not docs: return []
+    if not docs:
+        return []
 
     split_docs = []
-    
     for doc in docs:
         ext = os.path.splitext(doc.metadata.get("source", ""))[1].lower()
         
-        # Map common extensions to Langchain Language Enums
+        # map extension to lang enum so the splitter knows what to do
+        lang = None
         if ext == ".py": lang = Language.PYTHON
         elif ext in [".js", ".jsx"]: lang = Language.JS
         elif ext in [".ts", ".tsx"]: lang = Language.TS
@@ -34,9 +34,8 @@ def load_and_split_project(directory_path: str):
         elif ext == ".rs": lang = Language.RUST
         elif ext == ".html": lang = Language.HTML
         elif ext == ".md": lang = Language.MARKDOWN
-        else: lang = None
 
-        # Dynamically apply the right text splitter
+        # fallback to regular chunking if we don't know the language AST
         if lang:
             splitter = RecursiveCharacterTextSplitter.from_language(lang, chunk_size=1000, chunk_overlap=200)
         else:

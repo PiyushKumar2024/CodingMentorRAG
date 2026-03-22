@@ -1,24 +1,22 @@
 from langchain_community.vectorstores import FAISS
 from langchain_community.embeddings import OllamaEmbeddings
 
-# Using the exact nomic local embedding model specified by the user
+# using nomic's local embeddings here
 embeddings = OllamaEmbeddings(model="nomic-embed-text:latest")
 
 def build_workspace_index(docs, progress_callback=None):
-    """Builds a temporary dynamic FAISS index from codebase chunks."""
-    # Build index from scratch with Progress Bar chunking
     if not docs:
-        raise ValueError("No valid code documents found to index.")
+        raise ValueError("No valid docs to index.")
         
-    # Initialize blank FAISS with the first document
+    # start blank with the first doc
     vectorstore = FAISS.from_documents([docs[0]], embeddings)
     if progress_callback:
         progress_callback(1, len(docs))
         
-    # Process the rest in batches so Streamlit can update visually
     total = len(docs)
-    batch_size = 5 # Small batch size keeps progress bar updating smoothly
+    batch_size = 5 # small batch to keep the UI smooth
     
+    # process the rest in chunks so we don't freeze the app
     for i in range(1, total, batch_size):
         batch = docs[i:i+batch_size]
         vectorstore.add_documents(batch)
@@ -28,6 +26,5 @@ def build_workspace_index(docs, progress_callback=None):
     return vectorstore
 
 def get_workspace_retriever(vectorstore):
-    """Returns a retriever for the dynamic workspace."""
-    # We fetch top 5 related chunks to provide massive context to deepseek-coder
+    # pull top 5 so deepseek has enough context
     return vectorstore.as_retriever(search_kwargs={"k": 5})
