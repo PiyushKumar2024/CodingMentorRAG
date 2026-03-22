@@ -4,31 +4,44 @@ from langchain_community.document_loaders.generic import GenericLoader
 from langchain_community.document_loaders.parsers import LanguageParser
 
 def load_and_split_project(directory_path: str):
-    """
-    Loads all C, C++, Python, and JS files from a directory 
-    and splits them logically using AST/Syntax-aware splitters.
-    """
+    """Loads and splits multi-language codebase files smoothly and dynamically."""
     
-    # Generic loader that ignores binary files and hidden folders by default
+    # Standard extensions for most projects
+    suffixes = [".py", ".js", ".jsx", ".ts", ".tsx", ".c", ".cpp", ".h", ".hpp", ".go", ".java", ".rs", ".md", ".html"]
+    
     loader = GenericLoader.from_filesystem(
         directory_path,
         glob="**/*",
-        suffixes=[".c", ".cpp", ".py", ".js"],
+        suffixes=suffixes,
         parser=LanguageParser()
     )
-    
     docs = loader.load()
-    
-    if not docs:
-        return []
+    if not docs: return []
 
-    # Use a generic code splitter (Python setup works well universally for bracketed/indented languages)
-    # This prevents blindly cutting a function in half by respecting '\nclass ', '\ndef ', etc.
-    code_splitter = RecursiveCharacterTextSplitter.from_language(
-        language=Language.PYTHON, 
-        chunk_size=1000, 
-        chunk_overlap=200
-    )
+    split_docs = []
     
-    split_docs = code_splitter.split_documents(docs)
+    for doc in docs:
+        ext = os.path.splitext(doc.metadata.get("source", ""))[1].lower()
+        
+        # Map common extensions to Langchain Language Enums
+        if ext == ".py": lang = Language.PYTHON
+        elif ext in [".js", ".jsx"]: lang = Language.JS
+        elif ext in [".ts", ".tsx"]: lang = Language.TS
+        elif ext in [".cpp", ".hpp"]: lang = Language.CPP
+        elif ext in [".c", ".h"]: lang = Language.C
+        elif ext == ".go": lang = Language.GO
+        elif ext == ".java": lang = Language.JAVA
+        elif ext == ".rs": lang = Language.RUST
+        elif ext == ".html": lang = Language.HTML
+        elif ext == ".md": lang = Language.MARKDOWN
+        else: lang = None
+
+        # Dynamically apply the right text splitter
+        if lang:
+            splitter = RecursiveCharacterTextSplitter.from_language(lang, chunk_size=1000, chunk_overlap=200)
+        else:
+            splitter = RecursiveCharacterTextSplitter(chunk_size=1000, chunk_overlap=200)
+
+        split_docs.extend(splitter.split_documents([doc]))
+
     return split_docs

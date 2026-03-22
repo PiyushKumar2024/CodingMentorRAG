@@ -32,7 +32,7 @@ Codebase Context:
 {context}
 
 If asked to generate code, provide completely working replacements or new files. Do NOT make up files that don't exist."""),
-    MessagesPlaceholder(variable_name="chat_history"),
+    MessagesPlaceholder(variable_name="chat_history"), #for history of chat
     ("user", "{query}")
 ])
 
