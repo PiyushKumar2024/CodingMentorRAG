@@ -3,7 +3,7 @@ import os
 
 from llm_engine.llm import generate_snippet_review_stream, generate_workspace_answer_stream
 from rag_engine.project_loader import load_and_split_project
-from rag_engine.workspace_vector_store import build_or_load_workspace_index, get_workspace_retriever, get_cache_path
+from rag_engine.workspace_vector_store import build_workspace_index, get_workspace_retriever
 
 st.set_page_config(page_title="AI Developer Platform", page_icon="💻", layout="wide")
 
@@ -41,46 +41,48 @@ elif mode == "📂 Workspace Assistant":
         if not workspace_path or not os.path.exists(workspace_path):
             st.error("Please provide a valid, existing directory path.")
         else:
-            # First, check if index actsually already exists in cache so we can skip loading completely
-            cache_path = get_cache_path(workspace_path)
-            
-            if os.path.exists(os.path.join(cache_path, "index.faiss")):
-                st.info(f"⚡ Found cached index for {os.path.basename(workspace_path)}! Loading instantly...")
-                vectorstore = build_or_load_workspace_index(workspace_path, [])
+            with st.spinner("Ingesting codebase files from directory..."):
+                docs = load_and_split_project(workspace_path)
+                
+            if docs:
+                # Create a Streamlit progress bar
+                progress_bar = st.progress(0, text="Embedding and Indexing Code Chunks...")
+                
+                def update_progress(current, total):
+                    percent = min(current / total, 1.0)
+                    progress_bar.progress(percent, text=f"Embedding Chunks... ({current}/{total})")
+                    
+                # Build index while calling update_progress iteratively
+                vectorstore = build_workspace_index(docs, progress_callback=update_progress)
+                
+                progress_bar.empty() # Remove the UI bar when finished
+                
                 st.session_state["workspace_retriever"] = get_workspace_retriever(vectorstore)
-                st.success("Successfully loaded workspace from cache!")
+                st.success(f"Successfully processed workspace: {workspace_path} ({len(docs)} chunks embedded & saved)")
                 st.session_state["workspace_ready"] = True
             else:
-                with st.spinner("Ingesting codebase files from directory..."):
-                    docs = load_and_split_project(workspace_path)
-                    
-                if docs:
-                    # Create a Streamlit progress bar
-                    progress_bar = st.progress(0, text="Embedding and Indexing Code Chunks...")
-                    
-                    def update_progress(current, total):
-                        percent = min(current / total, 1.0)
-                        progress_bar.progress(percent, text=f"Embedding Chunks... ({current}/{total})")
-                        
-                    # Build index while calling update_progress iteratively
-                    vectorstore = build_or_load_workspace_index(workspace_path, docs, progress_callback=update_progress)
-                    
-                    progress_bar.empty() # Remove the UI bar when finished
-                    
-                    st.session_state["workspace_retriever"] = get_workspace_retriever(vectorstore)
-                    st.success(f"Successfully processed workspace: {workspace_path} ({len(docs)} chunks embedded & saved)")
-                    st.session_state["workspace_ready"] = True
-                else:
-                    st.error("No valid code files (.c, .py, .js, .cpp) found in the directory.")
+                st.error("No valid code files (.c, .py, .js, .cpp) found in the directory.")
     
     if st.session_state.get("workspace_ready"):
         st.markdown("---")
         st.subheader("Chat with your Codebase")
         
-        # Simple Chat Interface Scaffold
+        # Initialize chat history state
+        if "messages" not in st.session_state:
+            st.session_state["messages"] = []
+            
+        # Display chat messages from history on app rerun
+        for message in st.session_state["messages"]:
+            with st.chat_message(message["role"]):
+                st.markdown(message["content"])
+        
         query = st.chat_input("Ask about architecture, or tell me to write a new feature...")
         if query:
-            st.chat_message("user").markdown(query)
+            # Render user query and save it immediately
+            with st.chat_message("user"):
+                st.markdown(query)
+            st.session_state["messages"].append({"role": "user", "content": query})
+            
             with st.chat_message("assistant"):
                 # Retrieve files from our dynamic FAISS index
                 retriever = st.session_state["workspace_retriever"]
@@ -92,5 +94,11 @@ elif mode == "📂 Workspace Assistant":
                     source_file = doc.metadata.get("source", "Unknown file")
                     context += f"\n--- Source: {source_file} ---\n{doc.page_content}\n"
                 
+                # Pass history (excluding the very last item which is the current user query)
+                history_for_llm = st.session_state["messages"][:-1]
+                
                 # Stream the response utilizing the contextual pipeline
-                st.write_stream(generate_workspace_answer_stream(query, context))
+                answer = st.write_stream(generate_workspace_answer_stream(query, context, history_for_llm))
+                
+            # Append AI response to track the memory
+            st.session_state["messages"].append({"role": "assistant", "content": answer})
