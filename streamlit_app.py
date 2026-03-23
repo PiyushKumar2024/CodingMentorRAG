@@ -79,6 +79,11 @@ elif mode == "Workspace Assistant":
                 retriever = st.session_state["workspace_retriever"]
                 retrieved_docs = retriever.invoke(query)
                 
+                # Debug UI: show exactly what files FAISS retrieved before answering
+                with st.expander(f"🔍 System analyzed {len(retrieved_docs)} retrieved code chunks for this question"):
+                    for doc in retrieved_docs:
+                        st.caption(f"- `{doc.metadata.get('source', 'Unknown file')}`")
+                
                 # stitch together the context chunks
                 context = ""
                 for doc in retrieved_docs:

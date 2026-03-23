@@ -1,28 +1,39 @@
 import os
+from langchain_core.documents import Document
 from langchain_text_splitters import RecursiveCharacterTextSplitter, Language
-from langchain_community.document_loaders.generic import GenericLoader
-from langchain_community.document_loaders.parsers import LanguageParser
 
 def load_and_split_project(directory_path: str):
-    # just grab the most common extensions
-    suffixes = [".py", ".js", ".jsx", ".ts", ".tsx", ".c", ".cpp", ".h", ".hpp", ".go", ".java", ".rs", ".md", ".html"]
+    suffixes = {".py", ".js", ".jsx", ".ts", ".tsx", ".c", ".cpp", ".h", ".hpp", ".go", ".java", ".rs", ".md", ".html"}
     
-    # generic loader doesn't choke on binary stuff by default
-    loader = GenericLoader.from_filesystem(
-        directory_path,
-        glob="**/*",
-        suffixes=suffixes,
-        parser=LanguageParser()
-    )
-    docs = loader.load()
+    # skip massive vendor and build directories to keep RAG pure and fast
+    exclude_dirs = {"node_modules", ".git", "venv", "env", "__pycache__", "dist", "build", "target", "out", ".next"}
+    
+    docs = []
+    
+    for root, dirs, files in os.walk(directory_path):
+        # modify dirs in-place to completely skip entering excluded directories
+        dirs[:] = [d for d in dirs if d not in exclude_dirs]
+        
+        for file in files:
+            ext = os.path.splitext(file)[1].lower()
+            if ext in suffixes:
+                file_path = os.path.join(root, file)
+                try:
+                    with open(file_path, "r", encoding="utf-8", errors="ignore") as f:
+                        content = f.read()
+                        if content.strip():
+                            docs.append(Document(page_content=content, metadata={"source": file_path}))
+                except Exception:
+                    # ignore files with weird encodings or read permissions
+                    continue
+
     if not docs:
         return []
 
     split_docs = []
     for doc in docs:
-        ext = os.path.splitext(doc.metadata.get("source", ""))[1].lower()
+        ext = os.path.splitext(doc.metadata["source"])[1].lower()
         
-        # map extension to lang enum so the splitter knows what to do
         lang = None
         if ext == ".py": lang = Language.PYTHON
         elif ext in [".js", ".jsx"]: lang = Language.JS
@@ -35,11 +46,10 @@ def load_and_split_project(directory_path: str):
         elif ext == ".html": lang = Language.HTML
         elif ext == ".md": lang = Language.MARKDOWN
 
-        # fallback to regular chunking if we don't know the language AST
         if lang:
-            splitter = RecursiveCharacterTextSplitter.from_language(lang, chunk_size=1000, chunk_overlap=200)
+            splitter = RecursiveCharacterTextSplitter.from_language(lang, chunk_size=2500, chunk_overlap=500)
         else:
-            splitter = RecursiveCharacterTextSplitter(chunk_size=1000, chunk_overlap=200)
+            splitter = RecursiveCharacterTextSplitter(chunk_size=2500, chunk_overlap=500)
 
         split_docs.extend(splitter.split_documents([doc]))
 

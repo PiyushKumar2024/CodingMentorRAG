@@ -4,4 +4,5 @@ langchain
 langchain-community
 langchain-text-splitters
 streamlit
-esprima
+langchain-openai
+python-dotenv
