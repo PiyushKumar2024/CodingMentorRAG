@@ -5,7 +5,7 @@ from langchain_text_splitters import RecursiveCharacterTextSplitter, Language
 def load_and_split_project(directory_path):
     suffixes = {".py", ".js", ".jsx", ".ts", ".tsx", ".c", ".cpp", ".h", ".hpp", ".go", ".java", ".rs", ".md", ".html"}
     
-    # skip massive vendor and build directories to keep RAG pure and fast
+    # skip massive build directories
     exclude_dirs = {"node_modules", ".git", "venv", "env", "__pycache__", "dist", "build", "target", "out", ".next"}
     
     docs = []

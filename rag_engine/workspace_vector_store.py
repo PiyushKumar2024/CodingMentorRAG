@@ -40,13 +40,13 @@ def build_workspace_index(docs, progress_callback=None):
         batch = docs[i:i+batch_size]
         
         for doc in batch:
-            time.sleep(2.1) # CRITICAL: Bypass 429 RateLimit by forcing 28.5 requests per minute
+            time.sleep(2.1) 
             summary = generate_chunk_summary(doc.page_content, doc.metadata.get("source", "Unknown"))
             if summary:
                 file_src = doc.metadata.get('source', 'Unknown')
                 doc.page_content = f"FILE PATH: {file_src}\nSUMMARY: {summary}\n\nCODE:\n{doc.page_content}"
                 
-        # Bulk append the chunks so the user can literally read the index in VS Code
+        # Bulk append the chunks to read the index in VS Code
         with open(debug_path, "a", encoding="utf-8") as debug_file:
             for doc in batch:
                 debug_file.write(f"--- FILE: {doc.metadata.get('source')} ---\n{doc.page_content}\n=========================================\n\n")

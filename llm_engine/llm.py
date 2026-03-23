@@ -4,11 +4,11 @@ from langchain_openai import ChatOpenAI
 from langchain_community.chat_models import ChatOllama
 from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
 
-# Load environment variables securely from .env
+# Load environment variables 
 load_dotenv()
 os.environ["NO_PROXY"] = "localhost,127.0.0.1"
 
-# Conversation LLM: try Cerebras LLaMA 3.1 8B first
+# Conversation LLM
 primary_llm = ChatOpenAI(
     base_url="https://api.cerebras.ai/v1",
     api_key=os.environ.get("CEREBRAS_API_KEY"),
