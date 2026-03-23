@@ -2,7 +2,7 @@ import os
 from langchain_core.documents import Document
 from langchain_text_splitters import RecursiveCharacterTextSplitter, Language
 
-def load_and_split_project(directory_path: str):
+def load_and_split_project(directory_path):
     suffixes = {".py", ".js", ".jsx", ".ts", ".tsx", ".c", ".cpp", ".h", ".hpp", ".go", ".java", ".rs", ".md", ".html"}
     
     # skip massive vendor and build directories to keep RAG pure and fast

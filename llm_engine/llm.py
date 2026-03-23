@@ -8,10 +8,10 @@ from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
 load_dotenv()
 os.environ["NO_PROXY"] = "localhost,127.0.0.1"
 
-# Conversation LLM: Tries blazing-fast Cerebras LLaMA 3.1 8B first, instantly falls back to local Ollama if offline
+# Conversation LLM: try Cerebras LLaMA 3.1 8B first
 primary_llm = ChatOpenAI(
     base_url="https://api.cerebras.ai/v1",
-    api_key=os.environ["CEREBRAS_API_KEY"],
+    api_key=os.environ.get("CEREBRAS_API_KEY"),
     model="llama3.1-70b",
     temperature=0,
     streaming=True
@@ -19,10 +19,10 @@ primary_llm = ChatOpenAI(
 backup_llm = ChatOllama(model="deepseek-coder:6.7b", temperature=0, streaming=True)
 llm = primary_llm.with_fallbacks([backup_llm])
 
-# Summarization LLM: utilizing Cerebras 8B but completely rate-limited in workspace_vector_store to survive quotas
+# Summarization LLM
 summary_llm = ChatOpenAI(
     base_url="https://api.cerebras.ai/v1",
-    api_key=os.environ["CEREBRAS_API_KEY"],
+    api_key=os.environ.get("CEREBRAS_API_KEY"),
     model="llama3.1-8b",
     temperature=0,
     streaming=False,
@@ -37,7 +37,7 @@ CRITICAL RULE 2: You MUST explicitly write out the precise File Name, exactly wh
 ])
 summarization_chain = summarization_prompt | summary_llm
 
-def generate_chunk_summary(code: str, source: str) -> str:
+def generate_chunk_summary(code, source):
     try:
         response = summarization_chain.invoke({"code": code, "source": source})
         return response.content.strip()
@@ -74,14 +74,14 @@ CRITICAL RULES FOR LLAMA:
 quick_review_chain = quick_review_prompt | llm
 workspace_chain = workspace_prompt | llm
 
-def generate_snippet_review_stream(code: str):
+def generate_snippet_review_stream(code):
     try:
         for chunk in quick_review_chain.stream({"code": code}):
             yield chunk.content
     except Exception as e:
         yield f"\n\nError: {e}"
 
-def generate_workspace_answer_stream(query: str, context: str, chat_history: list = None):
+def generate_workspace_answer_stream(query, context, chat_history=None):
     chat_history = chat_history or []
     formatted_history = [(msg["role"], msg["content"]) for msg in chat_history]
         
