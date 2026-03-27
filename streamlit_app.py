@@ -2,6 +2,7 @@ import streamlit as st
 import os
 
 from llm_engine.llm import generate_snippet_review_stream, generate_workspace_answer_stream
+import llm_engine.llm as llm_module
 from rag_engine.project_loader import load_and_split_project
 from rag_engine.workspace_vector_store import build_workspace_index, get_workspace_retriever
 
@@ -25,6 +26,7 @@ if mode == "Quick Code Review":
             st.subheader("Review")
             # stream response directly to UI
             st.write_stream(generate_snippet_review_stream(code_input))
+            st.caption(f"Model: {llm_module.last_provider}")
 
 elif mode == "Workspace Assistant":
     st.title("Workspace Assistant")
@@ -93,5 +95,6 @@ elif mode == "Workspace Assistant":
                 # strip the latest message from history to prevent duplication
                 history_for_llm = st.session_state["messages"][:-1]
                 answer = st.write_stream(generate_workspace_answer_stream(query, context, history_for_llm))
+                st.caption(f"Model: {llm_module.last_provider}")
                 
             st.session_state["messages"].append({"role": "assistant", "content": answer})
